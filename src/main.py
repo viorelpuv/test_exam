@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox, font
 from PIL import Image, ImageTk
 import random
 import time
+from datetime import datetime
 from utils.database import Database
 
 
@@ -569,6 +570,209 @@ class EventDetailWindow(tk.Toplevel):
         messagebox.showinfo("Поделиться", "Ссылка скопирована в буфер обмена")
 
 
+class OrganizerWindow(tk.Toplevel):
+    def __init__(self, parent, db, user_info):
+        super().__init__(parent)
+        self.parent = parent
+        self.db = db
+        self.user_info = user_info
+
+        # Настройка окна
+        self.title("Окно организатора")
+        self.geometry("1000x700")
+        self.configure(bg="#f5f5f5")
+        self.minsize(900, 600)
+
+        # Создаем интерфейс
+        self.create_widgets()
+
+        # Центрируем окно
+        self.center_window()
+
+    def center_window(self):
+        """Центрирование окна"""
+        self.update_idletasks()
+        width = self.winfo_width()
+        height = self.winfo_height()
+        x = (self.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.winfo_screenheight() // 2) - (height // 2)
+        self.geometry(f'{width}x{height}+{x}+{y}')
+
+    def get_greeting(self):
+        """Получение приветствия в зависимости от времени"""
+        current_hour = datetime.now().hour
+
+        if 9 <= current_hour < 11:
+            return "Доброе утро"
+        elif 11 <= current_hour < 18:
+            return "Добрый день"
+        elif 18 <= current_hour <= 23:
+            return "Добрый вечер"
+        else:
+            return "Доброй ночи"
+
+    def get_time_range(self):
+        """Получение временного диапазона"""
+        current_hour = datetime.now().hour
+
+        if 9 <= current_hour < 11:
+            return "(9:00-11:00)"
+        elif 11 <= current_hour < 18:
+            return "(11:01-18:00)"
+        elif 18 <= current_hour <= 23:
+            return "(18:01-00:00)"
+        else:
+            return "(00:01-8:59)"
+
+    def create_widgets(self):
+        # Верхняя панель с заголовком
+        top_frame = tk.Frame(self, bg="#2c3e50", height=70)
+        top_frame.pack(fill="x")
+        top_frame.pack_propagate(False)
+
+        # Заголовок
+        title_label = tk.Label(top_frame, text="ОКНО ОРГАНИЗАТОРА",
+                               font=('Arial', 22, 'bold'),
+                               bg="#2c3e50", fg="white")
+        title_label.pack(side="left", padx=30, pady=20)
+
+        # Кнопка выхода справа
+        logout_btn = tk.Button(top_frame, text="Выйти",
+                               command=self.logout,
+                               bg="#e74c3c", fg="white",
+                               font=('Arial', 11),
+                               padx=20, pady=5,
+                               cursor="hand2",
+                               relief="flat")
+        logout_btn.pack(side="right", padx=30, pady=20)
+
+        # Основной контент
+        main_frame = tk.Frame(self, bg="#f5f5f5")
+        main_frame.pack(fill="both", expand=True, padx=30, pady=20)
+
+        # Левая панель (1/4 экрана) - профиль
+        left_panel = tk.Frame(main_frame, bg="white",
+                              relief="solid", borderwidth=1)
+        left_panel.pack(side="left", fill="y", padx=(0, 30))
+        left_panel.pack_propagate(False)
+        left_panel.config(width=220)  # 1/4 от 880px
+
+        # Фото организатора
+        photo_frame = tk.Frame(left_panel, bg="white", pady=40)
+        photo_frame.pack(fill="x")
+
+        # Серый квадрат для фото
+        photo_canvas = tk.Canvas(photo_frame, width=150, height=150,
+                                 bg="#cccccc", highlightthickness=0)
+        photo_canvas.pack()
+
+        # Текст "Фото" в центре
+        photo_canvas.create_text(75, 75, text="Фото",
+                                 font=("Arial", 16), fill="#666666")
+
+        # Кнопка "Мой профиль"
+        profile_btn = tk.Button(left_panel, text="Мой профиль",
+                                command=self.open_profile,
+                                bg="#3498db", fg="white",
+                                font=("Arial", 13, "bold"),
+                                width=18, height=2,
+                                padx=10, pady=5)
+        profile_btn.pack(pady=30)
+
+        # Центральная панель
+        center_panel = tk.Frame(main_frame, bg="#f5f5f5")
+        center_panel.pack(side="left", fill="both", expand=True)
+
+        # Центральный контейнер
+        center_container = tk.Frame(center_panel, bg="white",
+                                    relief="solid", borderwidth=1)
+        center_container.pack(expand=True, fill="both")
+
+        # Контейнер для центрального содержимого
+        center_content = tk.Frame(center_container, bg="white")
+        center_content.pack(expand=True)
+
+        # Приветствие
+        greeting = self.get_greeting()
+        time_range = self.get_time_range()
+
+        greeting_frame = tk.Frame(center_content, bg="white")
+        greeting_frame.pack(pady=(50, 10))
+
+        greeting_label = tk.Label(greeting_frame,
+                                  text=greeting,
+                                  font=("Arial", 28, "bold"),
+                                  bg="white",
+                                  fg="#2c3e50")
+        greeting_label.pack()
+
+        time_label = tk.Label(greeting_frame,
+                              text=time_range,
+                              font=("Arial", 14),
+                              bg="white",
+                              fg="#666666")
+        time_label.pack(pady=(5, 0))
+
+        # Имя пользователя
+        user_name = self.user_info['data'].get('имя', 'Организатор')
+        name_frame = tk.Frame(center_content, bg="white")
+        name_frame.pack(pady=30)
+
+        name_label = tk.Label(name_frame,
+                              text=user_name,
+                              font=("Arial", 20),
+                              bg="white",
+                              fg="#333333")
+        name_label.pack()
+
+        # Кнопки меню
+        buttons_frame = tk.Frame(center_content, bg="white")
+        buttons_frame.pack(pady=20)
+
+        # Список кнопок
+        buttons = [
+            ("Мероприятия", self.open_events),
+            ("Участники", self.open_participants),
+            ("Жюри", self.open_jury)
+        ]
+
+        for text, command in buttons:
+            btn_frame = tk.Frame(buttons_frame, bg="white")
+            btn_frame.pack(pady=15)
+
+            btn = tk.Button(btn_frame, text=text,
+                            command=command,
+                            bg="#2c3e50", fg="white",
+                            font=("Arial", 14, "bold"),
+                            width=20, height=2,
+                            padx=20, pady=10,
+                            cursor="hand2",
+                            relief="raised")
+            btn.pack()
+
+    def open_profile(self):
+        """Открытие профиля"""
+        messagebox.showinfo("Профиль", "Редактирование профиля")
+
+    def open_events(self):
+        """Открытие мероприятий"""
+        self.withdraw()  # Скрываем окно организатора
+        EventsWindow(self, self.db, self.user_info)
+
+    def open_participants(self):
+        """Открытие участников"""
+        messagebox.showinfo("Участники", "Список участников")
+
+    def open_jury(self):
+        """Открытие жюри"""
+        messagebox.showinfo("Жюри", "Список жюри")
+
+    def logout(self):
+        """Выход из системы"""
+        self.destroy()
+        self.parent.deiconify()  # Показываем окно авторизации
+
+
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -724,13 +928,30 @@ class App(tk.Tk):
         if user_data:
             self.current_user = user_data
             self.withdraw()  # Скрываем окно авторизации
-            self.show_events_window(user_data)
+
+            # ВАЖНОЕ ИСПРАВЛЕНИЕ: Открываем разные окна в зависимости от роли
+            if user_data['role'] == 'organizer':
+                self.show_organizer_window(user_data)
+            elif user_data['role'] == 'moderator':
+                self.show_moderator_window(user_data)
+            elif user_data['role'] == 'participant':
+                self.show_events_window(user_data)
         else:
             messagebox.showerror("Ошибка", "Неверная почта или пароль!")
             self.reset_captcha()
 
+    def show_organizer_window(self, user_data):
+        """Показ окна организатора"""
+        OrganizerWindow(self, self.db, user_data)
+
+    def show_moderator_window(self, user_data):
+        """Показ окна модератора"""
+        # Можно создать отдельное окно для модератора или использовать EventsWindow
+        messagebox.showinfo("Модератор", "Добро пожаловать, модератор!")
+        self.show_events_window(user_data)
+
     def show_events_window(self, user_data):
-        """Показ окна с мероприятиями"""
+        """Показ окна с мероприятиями (для участников)"""
         EventsWindow(self, self.db, user_data)
 
     def lock_login(self):
